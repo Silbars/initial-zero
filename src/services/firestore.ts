@@ -12,7 +12,6 @@ import {
 import { db } from "./firebase";
 import { doc, deleteDoc } from "firebase/firestore";
 
-// Function to save a new meal
 export const addMealLog = async (userId: string, meal: any) => {
   const logsRef = collection(db, "users", userId, "dailyLogs");
   return addDoc(logsRef, {
@@ -21,24 +20,20 @@ export const addMealLog = async (userId: string, meal: any) => {
   });
 };
 
-// Function to listen for today's logs in real-time
 export const subscribeToTodayLogs = (userId: string, callback: (logs: any[]) => void) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const logsRef = collection(db, "users", userId, "dailyLogs");
-  // Query: Only get logs from today, sorted by newest first
   const q = query(
     logsRef, 
     where("timestamp", ">=", Timestamp.fromDate(today)),
     orderBy("timestamp", "desc")
   );
 
-  // This creates the "Live Connection"
   return onSnapshot(q, (snapshot) => {
     const logs = snapshot.docs.map((snapshotDoc) => ({
       ...snapshotDoc.data(),
-      // Keep Firestore document id as the canonical id for update/delete operations.
       id: snapshotDoc.id,
     }));
     callback(logs);

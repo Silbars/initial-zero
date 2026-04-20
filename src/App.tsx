@@ -16,7 +16,6 @@ function App() {
       <Routes>
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         
-        {/* All Private Routes go inside the Layout */}
         <Route path="/" element={
           user ? (
             <MainLayout>
@@ -33,15 +32,13 @@ function App() {
           ) : <Navigate to="/login" />
         } />
 
-
-// Inside the block of App.tsx:
-<Route path="/library" element={
-  user ? (
-    <MainLayout>
-      <FoodLibrary />
-    </MainLayout>
-  ) : <Navigate to="/login" />
-} />
+        <Route path="/library" element={
+          user ? (
+            <MainLayout>
+              <FoodLibrary />
+            </MainLayout>
+          ) : <Navigate to="/login" />
+        } />
       </Routes>
       
     </BrowserRouter>

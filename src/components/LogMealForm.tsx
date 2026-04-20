@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PlusCircle, Loader2, X, Check, Weight } from 'lucide-react';
 import { searchFoodNutrition } from '../services/usda';
 
@@ -6,23 +6,27 @@ export const LogMealForm = ({ onAdd }: { onAdd: (meal: any) => void }) => {
   const [text, setText] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [preview, setPreview] = useState<any | null>(null);
-  const [grams, setGrams] = useState(100); // Default to 100g
+  const [grams, setGrams] = useState(100);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || isSearching) return;
 
     setIsSearching(true);
+    setIsNotFound(false);
     const data = await searchFoodNutrition(text);
     
     if (data) {
       setPreview(data);
-      setGrams(100); // Reset to 100g for every new search
+      setGrams(100);
+      setIsNotFound(false);
+    } else {
+      setIsNotFound(true);
     }
     setIsSearching(false);
   };
 
-  // The logic to "Scale" the macros based on input grams
   const multiplier = grams / 100;
   const scaledPreview = preview ? {
     ...preview,
@@ -43,18 +47,27 @@ export const LogMealForm = ({ onAdd }: { onAdd: (meal: any) => void }) => {
   return (
     <div className="mb-8">
       {!preview ? (
-        <form onSubmit={handleSearch} className="flex gap-3 animate-in fade-in zoom-in">
-          <input
-            type="text"
-            placeholder="Search food (e.g., Soya Granules)..."
-            className="flex-1 bg-white border border-gray-200 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <button type="submit" className="bg-orange-600 text-white p-4 rounded-2xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-100">
-            {isSearching ? <Loader2 className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
-          </button>
-        </form>
+        <div className="animate-in fade-in zoom-in">
+          <form onSubmit={handleSearch} className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Search food (e.g., Soya Granules)..."
+              className="flex-1 bg-white border border-gray-200 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                if (isNotFound) setIsNotFound(false);
+              }}
+            />
+            <button type="submit" className="bg-orange-600 text-white p-4 rounded-2xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-100">
+              {isSearching ? <Loader2 className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
+            </button>
+          </form>
+
+          {isNotFound && (
+            <p className="mt-3 text-sm font-bold text-slate-500">Item not found</p>
+          )}
+        </div>
       ) : (
         <div className="bg-slate-900 text-white p-6 rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-4">
           <div className="flex justify-between items-start mb-6">
@@ -67,7 +80,6 @@ export const LogMealForm = ({ onAdd }: { onAdd: (meal: any) => void }) => {
             </button>
           </div>
 
-          {/* Grams Input Section */}
           <div className="bg-slate-800 p-4 rounded-2xl mb-6 flex items-center gap-4 border border-slate-700">
             <div className="bg-slate-700 p-2 rounded-xl text-orange-500">
               <Weight size={20} />
@@ -84,7 +96,6 @@ export const LogMealForm = ({ onAdd }: { onAdd: (meal: any) => void }) => {
             </div>
           </div>
 
-          {/* Live Updating Macro Grid */}
           <div className="grid grid-cols-4 gap-3 mb-6">
             <MacroMini label="Cals" value={scaledPreview?.calories} />
             <MacroMini label="Prot" value={scaledPreview?.protein} color="border-orange-500" />
@@ -105,7 +116,6 @@ export const LogMealForm = ({ onAdd }: { onAdd: (meal: any) => void }) => {
   );
 };
 
-// Internal Helper Component
 const MacroMini = ({ label, value, color = "border-slate-700" }: any) => (
   <div className={`bg-slate-800/50 p-3 rounded-2xl text-center border-b-4 ${color}`}>
     <p className="text-[10px] text-slate-500 uppercase font-black tracking-tighter">{label}</p>

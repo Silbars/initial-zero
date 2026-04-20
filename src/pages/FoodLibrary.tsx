@@ -10,14 +10,12 @@ import {
   Check, 
   Utensils, 
   Trash2, 
-  ShoppingBasket,
-  Zap
+  ShoppingBasket
 } from 'lucide-react';
 
 const FoodLibrary = () => {
   const { user } = useAuth();
   
-  // State Management
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [todayLogs, setTodayLogs] = useState<any[]>([]);
@@ -25,11 +23,9 @@ const FoodLibrary = () => {
   const [selectedFood, setSelectedFood] = useState<any | null>(null);
   const [grams, setGrams] = useState(100);
 
-  // 1. LIFECYCLE: Load initial foods and subscribe to today's data
   useEffect(() => {
     if (!user) return;
 
-    // Load some default items so the library isn't empty
     const loadDefaults = async () => {
       setLoading(true);
       await handleSearchAction("high protein"); 
@@ -37,7 +33,6 @@ const FoodLibrary = () => {
     };
     loadDefaults();
 
-    // Live connection to today's basket
     const unsubscribe = subscribeToTodayLogs(user.uid, (logs) => {
       setTodayLogs(logs);
     });
@@ -45,15 +40,15 @@ const FoodLibrary = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // 2. SEARCH LOGIC: Talking to USDA
   const handleSearchAction = async (searchTerm: string) => {
     try {
       const response = await fetch(
         `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${import.meta.env.VITE_USDA_API_KEY}&query=${encodeURIComponent(searchTerm)}&pageSize=24`
       );
       const data = await response.json();
+      const foods = Array.isArray(data?.foods) ? data.foods : [];
       
-      const formattedResults = data.foods.map((food: any) => ({
+      const formattedResults = foods.map((food: any) => ({
         id: food.fdcId,
         foodName: food.description,
         calories: food.foodNutrients.find((n: any) => n.nutrientId === 1008)?.value || 0,
@@ -74,11 +69,11 @@ const FoodLibrary = () => {
     setLoading(false);
   };
 
-  // 3. CRUD ACTIONS: Add and Delete
+  const showNoResults = !loading && query.trim().length > 0 && results.length === 0;
+
   const handleAddToToday = async () => {
     if (!user || !selectedFood) return;
     
-    // Scaling Math: (Base Nutrient / 100) * User Input Grams
     const multiplier = grams / 100;
     const finalMeal = {
       ...selectedFood,
@@ -101,7 +96,6 @@ const FoodLibrary = () => {
   return (
     <div className="max-w-7xl mx-auto pb-20 flex flex-col lg:flex-row gap-8">
       
-      {/* --- MAIN EXPLORER AREA --- */}
       <div className="flex-1">
         <header className="mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -123,6 +117,11 @@ const FoodLibrary = () => {
           {loading && results.length === 0 ? (
             <div className="col-span-full py-20 text-center">
               <Loader2 className="w-10 h-10 animate-spin mx-auto text-orange-200" />
+            </div>
+          ) : showNoResults ? (
+            <div className="col-span-full py-20 text-center">
+              <p className="text-sm font-bold text-slate-500">Item not found</p>
+              <p className="text-xs text-slate-400 mt-1">Try another keyword or spelling.</p>
             </div>
           ) : (
             results.map((food) => (
@@ -151,7 +150,6 @@ const FoodLibrary = () => {
         </div>
       </div>
 
-      {/* --- TODAY'S BASKET SIDEBAR --- */}
       <aside className="w-full lg:w-80">
         <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white sticky top-24 shadow-2xl shadow-slate-200">
           <div className="flex items-center justify-between mb-8">
@@ -205,7 +203,6 @@ const FoodLibrary = () => {
         </div>
       </aside>
 
-      {/* --- PORTION MODAL --- */}
       {selectedFood && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
@@ -227,7 +224,7 @@ const FoodLibrary = () => {
                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Weight (Grams)</label>
                 <input 
                   type="number"
-                  value={grams}
+                  value={grams === 0 ? "" : grams}
                   onChange={(e) => setGrams(Number(e.target.value))}
                   className="bg-transparent text-4xl font-black text-white w-full outline-none"
                   autoFocus

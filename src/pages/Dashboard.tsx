@@ -18,15 +18,12 @@ const Dashboard = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [totals, setTotals] = useState({ protein: 0, carbs: 0, fats: 0, calories: 0 });
 
-  // 1. READ: Live Subscription to Firestore
   useEffect(() => {
     if (!user) return;
     
-    // This creates a "Pipe" between your app and the DB
     const unsubscribe = subscribeToTodayLogs(user.uid, (fetchedLogs) => {
       setLogs(fetchedLogs);
       
-      // Calculate daily totals using .reduce
       const newTotals = fetchedLogs.reduce((acc, log) => ({
         protein: acc.protein + (Number(log.protein) || 0),
         carbs: acc.carbs + (Number(log.carbs) || 0),
@@ -37,10 +34,9 @@ const Dashboard = () => {
       setTotals(newTotals);
     });
 
-    return () => unsubscribe(); // Stop listening when page closes
+    return () => unsubscribe();
   }, [user]);
 
-  // 2. CREATE: Add meal to database
   const handleAddMeal = async (mealData: any) => {
     if (user) {
       try {
@@ -51,7 +47,6 @@ const Dashboard = () => {
     }
   };
 
-  // 3. DELETE: Remove meal from database
   const handleDelete = async (logId: string) => {
     if (user) {
       await deleteMealLog(user.uid, logId);
@@ -60,7 +55,6 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
-      {/* Header Section */}
       <header className="mb-10">
         <div className="flex items-center gap-2 mb-1">
           <TrendingUp className="text-orange-500 w-5 h-5" />
@@ -69,12 +63,10 @@ const Dashboard = () => {
         <h2 className="text-4xl font-black text-slate-900">Your Progress 📈</h2>
       </header>
 
-      {/* Input Section (The LogMealForm with the Preview Card) */}
       <section className="mb-12">
         <LogMealForm onAdd={handleAddMeal} />
       </section>
 
-      {/* Macro Grid */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <MacroCard title="Total Calories" current={totals.calories} target={2500} unit="kcal" color="slate" icon={<Target />} />
         <MacroCard title="Protein" current={totals.protein} target={150} unit="g" color="orange" icon={<Activity />} />
@@ -82,7 +74,6 @@ const Dashboard = () => {
         <MacroCard title="Fats" current={totals.fats} target={70} unit="g" color="yellow" icon={<Droplets />} />
       </section>
 
-      {/* Today's History Section */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
@@ -136,7 +127,6 @@ const Dashboard = () => {
   );
 };
 
-/* --- SUB-COMPONENT: MACRO CARD --- */
 const MacroCard = ({ title, current, target, unit, color, icon }: any) => {
   const percentage = Math.min((current / target) * 100, 100);
   

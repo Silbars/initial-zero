@@ -13,18 +13,6 @@ export const searchFoodNutrition = async (query: string) => {
 
     const data = await response.json();
 
-    if (response.status === 503) {
-      console.warn("USDA Down - Using Mock Data for development");
-      return {
-        foodName: `${query} (Mock)`,
-        calories: 120,
-        protein: 15,
-        carbs: 20,
-        fats: 5,
-        servingSize: "1 unit"
-      };
-    }
-
     if (!data.foods || data.foods.length === 0) {
       console.log("No food items found for this query.");
       return null;
@@ -32,7 +20,6 @@ export const searchFoodNutrition = async (query: string) => {
 
     const food = data.foods[0];
     
-    // USDA Nutrient IDs: 1008=Calories, 1003=Protein, 1005=Carbs, 1004=Fat
     const getNutrient = (id: number) => 
       food.foodNutrients.find((n: any) => n.nutrientId === id)?.value || 0;
 

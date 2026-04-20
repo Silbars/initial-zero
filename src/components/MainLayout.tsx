@@ -7,7 +7,6 @@ import {
   Settings, 
   LogOut,
   Search, 
-  User as UserIcon 
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -15,17 +14,15 @@ export const MainLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-// Inside MainLayout.tsx, update the navItems array:
 const navItems = [
   { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-  { name: 'Library', path: '/library', icon: <Search size={20} /> }, // Added this
+  { name: 'Library', path: '/library', icon: <Search size={20} /> },
   { name: 'Pantry', path: '/pantry', icon: <UtensilsCrossed size={20} /> },
   { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
 ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* 1. Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 bg-slate-900 flex-col text-white sticky top-0 h-screen">
         <div className="p-8">
           <h1 className="text-2xl font-black tracking-tight text-orange-500">NutriFlow</h1>
@@ -59,9 +56,7 @@ const navItems = [
         </div>
       </aside>
 
-      {/* 2. Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header */}
         <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
           <div className="md:hidden font-bold text-orange-600">NutriFlow</div>
           <div className="hidden md:block text-sm text-gray-400 font-medium">
@@ -81,7 +76,6 @@ const navItems = [
           </div>
         </header>
 
-        {/* Dynamic Page Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {children}
         </div>

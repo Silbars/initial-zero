@@ -1,15 +1,12 @@
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { Apple } from 'lucide-react'; // A nice logo icon
+import { Apple } from 'lucide-react';
 
 const Login = () => {
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      // This triggers the popup window
       await signInWithPopup(auth, provider);
-      // Notice: We don't need a navigate() here! 
-      // Our App.tsx will see the user change and redirect for us.
     } catch (error) {
       console.error("Sign-in failed:", error);
     }
