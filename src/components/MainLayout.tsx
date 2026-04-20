@@ -5,7 +5,8 @@ import {
   LayoutDashboard, 
   UtensilsCrossed, 
   Settings, 
-  LogOut, 
+  LogOut,
+  Search, 
   User as UserIcon 
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -14,11 +15,13 @@ export const MainLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Pantry', path: '/pantry', icon: <UtensilsCrossed size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
-  ];
+// Inside MainLayout.tsx, update the navItems array:
+const navItems = [
+  { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
+  { name: 'Library', path: '/library', icon: <Search size={20} /> }, // Added this
+  { name: 'Pantry', path: '/pantry', icon: <UtensilsCrossed size={20} /> },
+  { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+];
 
   return (
     <div className="flex min-h-screen bg-gray-50">

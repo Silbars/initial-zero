@@ -1,94 +1,171 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { addMealLog, subscribeToTodayLogs } from '../services/firestore';
+import { addMealLog, subscribeToTodayLogs, deleteMealLog } from '../services/firestore';
 import { LogMealForm } from '../components/LogMealForm';
-import { Activity, Flame, Droplets, Clock } from 'lucide-react';
+import { 
+  Activity, 
+  Flame, 
+  Droplets, 
+  Clock, 
+  Trash2, 
+  Utensils, 
+  TrendingUp,
+  Target
+} from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [logs, setLogs] = useState<any[]>([]);
-  const [totals, setTotals] = useState({ protein: 0, carbs: 0, fats: 0 });
+  const [totals, setTotals] = useState({ protein: 0, carbs: 0, fats: 0, calories: 0 });
 
-  // 1. Start the Live Listener
+  // 1. READ: Live Subscription to Firestore
   useEffect(() => {
     if (!user) return;
     
-    // Subscribe and save the "Unsubscribe" function
+    // This creates a "Pipe" between your app and the DB
     const unsubscribe = subscribeToTodayLogs(user.uid, (fetchedLogs) => {
       setLogs(fetchedLogs);
       
-      // 2. Calculate Totals using .reduce()
+      // Calculate daily totals using .reduce
       const newTotals = fetchedLogs.reduce((acc, log) => ({
-        protein: acc.protein + (log.protein || 0),
-        carbs: acc.carbs + (log.carbs || 0),
-        fats: acc.fats + (log.fats || 0)
-      }), { protein: 0, carbs: 0, fats: 0 });
+        protein: acc.protein + (Number(log.protein) || 0),
+        carbs: acc.carbs + (Number(log.carbs) || 0),
+        fats: acc.fats + (Number(log.fats) || 0),
+        calories: acc.calories + (Number(log.calories) || 0)
+      }), { protein: 0, carbs: 0, fats: 0, calories: 0 });
 
       setTotals(newTotals);
     });
 
-    return () => unsubscribe(); // Cleanup on close
+    return () => unsubscribe(); // Stop listening when page closes
   }, [user]);
 
+  // 2. CREATE: Add meal to database
   const handleAddMeal = async (mealData: any) => {
-    if (user) await addMealLog(user.uid, mealData);
+    if (user) {
+      try {
+        await addMealLog(user.uid, mealData);
+      } catch (err) {
+        console.error("Failed to add meal:", err);
+      }
+    }
+  };
+
+  // 3. DELETE: Remove meal from database
+  const handleDelete = async (logId: string) => {
+    if (user) {
+      await deleteMealLog(user.uid, logId);
+    }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 pt-8 pb-20">
-      <h2 className="text-3xl font-black text-slate-900 mb-2">My Day 🥗</h2>
-      <p className="text-slate-500 mb-8">Tracking for today, {new Date().toLocaleDateString()}</p>
+    <div className="max-w-6xl mx-auto pb-24">
+      {/* Header Section */}
+      <header className="mb-10">
+        <div className="flex items-center gap-2 mb-1">
+          <TrendingUp className="text-orange-500 w-5 h-5" />
+          <span className="text-xs font-black uppercase tracking-widest text-slate-400">Daily Analytics</span>
+        </div>
+        <h2 className="text-4xl font-black text-slate-900">Your Progress 📈</h2>
+      </header>
 
-      {/* Input Section */}
-      <LogMealForm onAdd={handleAddMeal} />
+      {/* Input Section (The LogMealForm with the Preview Card) */}
+      <section className="mb-12">
+        <LogMealForm onAdd={handleAddMeal} />
+      </section>
 
       {/* Macro Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <MacroCard title="Protein" current={totals.protein} target={150} color="orange" icon={<Activity />} />
-        <MacroCard title="Carbs" current={totals.carbs} target={200} color="blue" icon={<Flame />} />
-        <MacroCard title="Fats" current={totals.fats} target={60} color="yellow" icon={<Droplets />} />
-      </div>
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <MacroCard title="Total Calories" current={totals.calories} target={2500} unit="kcal" color="slate" icon={<Target />} />
+        <MacroCard title="Protein" current={totals.protein} target={150} unit="g" color="orange" icon={<Activity />} />
+        <MacroCard title="Carbs" current={totals.carbs} target={200} unit="g" color="blue" icon={<Flame />} />
+        <MacroCard title="Fats" current={totals.fats} target={70} unit="g" color="yellow" icon={<Droplets />} />
+      </section>
 
-      {/* Recent Logs List */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-          <h3 className="font-bold text-slate-700">Today's History</h3>
+      {/* Today's History Section */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+            <Clock className="text-slate-400" size={20} />
+            Today's Log
+          </h3>
+          <span className="bg-white border border-gray-200 px-4 py-1 rounded-full text-xs font-bold text-slate-500 shadow-sm">
+            {logs.length} entries
+          </span>
         </div>
-        <div className="divide-y divide-gray-50">
+
+        <div className="space-y-4">
           {logs.map((log) => (
-            <div key={log.id} className="p-6 flex justify-between items-center hover:bg-gray-50 transition-colors">
-              <div>
-                <p className="font-bold text-slate-800">{log.foodName}</p>
-                <div className="flex gap-3 text-xs font-medium text-slate-400 mt-1">
-                  <span>P: {log.protein}g</span>
-                  <span>C: {log.carbs}g</span>
-                  <span>F: {log.fats}g</span>
+            <div key={log.id} className="group bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex items-center justify-between animate-in fade-in slide-in-from-left-4">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                  <Utensils size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 capitalize leading-none mb-2">{log.foodName}</h4>
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg">{log.calories} kcal</span>
+                    <div className="flex gap-2 text-[10px] font-black uppercase text-slate-400 tracking-tight">
+                      <span>P: {log.protein}g</span>
+                      <span className="opacity-30">|</span>
+                      <span>C: {log.carbs}g</span>
+                      <span className="opacity-30">|</span>
+                      <span>F: {log.fats}g</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="text-slate-300"><Clock className="w-4 h-4" /></div>
+
+              <button 
+                onClick={() => handleDelete(log.id)}
+                className="p-3 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+              >
+                <Trash2 size={20} />
+              </button>
             </div>
           ))}
-          {logs.length === 0 && <p className="p-10 text-center text-slate-400">No meals logged yet today.</p>}
+
+          {logs.length === 0 && (
+            <div className="text-center py-20 bg-gray-50/50 rounded-[40px] border-2 border-dashed border-gray-200">
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Nothing logged today</p>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 };
 
-// Simple reusable card component for the grid
-const MacroCard = ({ title, current, target, color, icon }: any) => {
+/* --- SUB-COMPONENT: MACRO CARD --- */
+const MacroCard = ({ title, current, target, unit, color, icon }: any) => {
   const percentage = Math.min((current / target) * 100, 100);
-  const colorMap: any = { orange: 'bg-orange-500', blue: 'bg-blue-500', yellow: 'bg-yellow-500' };
+  
+  const colors: any = {
+    orange: 'bg-orange-500',
+    blue: 'bg-blue-500',
+    yellow: 'bg-amber-400',
+    slate: 'bg-slate-900'
+  };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-      <div className="flex items-center gap-3 mb-4 opacity-70">{icon} <span className="font-bold">{title}</span></div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-black text-slate-900">{current}</span>
-        <span className="text-slate-400 font-medium">/ {target}g</span>
+    <div className="bg-white p-7 rounded-[32px] shadow-sm border border-gray-100 flex flex-col justify-between min-h-[180px]">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-2 bg-gray-50 rounded-xl text-slate-400">{icon}</div>
+        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">{title}</span>
       </div>
-      <div className="w-full bg-gray-100 h-2 rounded-full mt-4 overflow-hidden">
-        <div className={`${colorMap[color]} h-2 transition-all duration-500`} style={{ width: `${percentage}%` }}></div>
+      
+      <div>
+        <div className="flex items-baseline gap-1 mb-4">
+          <span className="text-3xl font-black text-slate-900 leading-none">{current}</span>
+          <span className="text-slate-400 text-sm font-bold">{unit}</span>
+        </div>
+        
+        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+          <div 
+            className={`${colors[color]} h-full transition-all duration-1000 ease-out`} 
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,9 @@ import {
   orderBy, 
   Timestamp 
 } from "firebase/firestore";
+
 import { db } from "./firebase";
+import { doc, deleteDoc } from "firebase/firestore";
 
 // Function to save a new meal
 export const addMealLog = async (userId: string, meal: any) => {
@@ -34,10 +36,23 @@ export const subscribeToTodayLogs = (userId: string, callback: (logs: any[]) => 
 
   // This creates the "Live Connection"
   return onSnapshot(q, (snapshot) => {
-    const logs = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+    const logs = snapshot.docs.map((snapshotDoc) => ({
+      ...snapshotDoc.data(),
+      // Keep Firestore document id as the canonical id for update/delete operations.
+      id: snapshotDoc.id,
     }));
     callback(logs);
   });
+};
+
+export const deleteMealLog = async (userId: string, logId: string) => {
+  console.log("Attempting to delete:", logId, "for user:", userId);
+  try {
+    const logRef = doc(db, "users", userId, "dailyLogs", logId);
+    await deleteDoc(logRef);
+    console.log("Delete successful in Firestore!");
+  } catch (error) {
+    console.error("FIREBASE DELETE ERROR:", error);
+  }
+
 };

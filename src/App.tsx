@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import './index.css'
 import { MainLayout } from './components/MainLayout';
 import { Pantry } from './pages/Pantry';
+import FoodLibrary from './pages/FoodLibrary';
 
 function App() {
   const { user, loading } = useAuth();
@@ -31,7 +32,18 @@ function App() {
             </MainLayout>
           ) : <Navigate to="/login" />
         } />
+
+
+// Inside the block of App.tsx:
+<Route path="/library" element={
+  user ? (
+    <MainLayout>
+      <FoodLibrary />
+    </MainLayout>
+  ) : <Navigate to="/login" />
+} />
       </Routes>
+      
     </BrowserRouter>
   );
 }
