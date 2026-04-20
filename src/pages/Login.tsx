@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { Apple, Mail, Lock } from 'lucide-react';
-import googleLogo from '../assets/google-logo.svg';
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -10,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -59,21 +58,6 @@ const Login = () => {
       console.error('Email auth failed:', error);
     } finally {
       setLoadingEmail(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    setLoadingGoogle(true);
-    setErrorMessage('');
-
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Google sign-in failed:', error);
-      setErrorMessage('Google sign-in failed. Please try again.');
-    } finally {
-      setLoadingGoogle(false);
     }
   };
 
@@ -136,7 +120,7 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={loadingEmail || loadingGoogle}
+            disabled={loadingEmail}
             className="w-full bg-orange-600 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-orange-500 transition-all active:scale-95 disabled:bg-orange-300"
           >
             {loadingEmail ? (isSignUp ? 'Creating account...' : 'Signing in...') : (isSignUp ? 'Create account' : 'Sign in with Email')}
@@ -155,21 +139,6 @@ const Login = () => {
             {isSignUp ? 'Already have an account? Sign in' : 'New here? Create an account'}
           </button>
         </form>
-
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-px bg-gray-200 flex-1" />
-          <span className="text-xs uppercase tracking-widest font-bold text-slate-400">or</span>
-          <div className="h-px bg-gray-200 flex-1" />
-        </div>
-
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loadingEmail || loadingGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white font-bold py-4 px-6 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 disabled:bg-slate-400"
-        >
-          <img src={googleLogo} alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
-          {loadingGoogle ? 'Signing in...' : 'Sign in with Google'}
-        </button>
       </div>
     </div>
   );
