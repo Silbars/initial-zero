@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { addMealLog, subscribeToTodayLogs, deleteMealLog } from '../services/firestore';
+import { addMealLog, subscribeToTodayLogs, deleteMealLog, getUserGoals } from '../services/firestore';
 import { LogMealForm } from '../components/LogMealForm';
 import { 
   Activity, 
@@ -17,6 +17,24 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [logs, setLogs] = useState<any[]>([]);
   const [totals, setTotals] = useState({ protein: 0, carbs: 0, fats: 0, calories: 0 });
+  const [goals, setGoals] = useState({ calories: 2000, protein: 150, carbs: 200, fats: 70 });
+
+  useEffect(() => {
+    if (!user) return;
+
+    getUserGoals(user.uid)
+      .then((savedGoals: any) => {
+        setGoals({
+          calories: Number(savedGoals?.calories) || 2000,
+          protein: Number(savedGoals?.protein) || 150,
+          carbs: Number(savedGoals?.carbs) || 200,
+          fats: Number(savedGoals?.fats) || 70,
+        });
+      })
+      .catch((error) => {
+        console.error('Failed to load user goals:', error);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -68,10 +86,10 @@ const Dashboard = () => {
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <MacroCard title="Total Calories" current={totals.calories} target={2500} unit="kcal" color="slate" icon={<Target />} />
-        <MacroCard title="Protein" current={totals.protein} target={150} unit="g" color="orange" icon={<Activity />} />
-        <MacroCard title="Carbs" current={totals.carbs} target={200} unit="g" color="blue" icon={<Flame />} />
-        <MacroCard title="Fats" current={totals.fats} target={70} unit="g" color="yellow" icon={<Droplets />} />
+        <MacroCard title="Total Calories" current={totals.calories} target={goals.calories} unit="kcal" color="slate" icon={<Target />} />
+        <MacroCard title="Protein" current={totals.protein} target={goals.protein} unit="g" color="orange" icon={<Activity />} />
+        <MacroCard title="Carbs" current={totals.carbs} target={goals.carbs} unit="g" color="blue" icon={<Flame />} />
+        <MacroCard title="Fats" current={totals.fats} target={goals.fats} unit="g" color="yellow" icon={<Droplets />} />
       </section>
 
       <section>
@@ -128,13 +146,22 @@ const Dashboard = () => {
 };
 
 const MacroCard = ({ title, current, target, unit, color, icon }: any) => {
-  const percentage = Math.min((current / target) * 100, 100);
+  const safeTarget = Number(target) > 0 ? Number(target) : 1;
+  const currentValue = Number(current) || 0;
+  const percentage = Math.min((currentValue / safeTarget) * 100, 100);
   
   const colors: any = {
     orange: 'bg-orange-500',
     blue: 'bg-blue-500',
     yellow: 'bg-amber-400',
     slate: 'bg-slate-900'
+  };
+
+  const valueTextColors: any = {
+    orange: 'text-orange-500',
+    blue: 'text-blue-500',
+    yellow: 'text-amber-500',
+    slate: 'text-slate-900'
   };
 
   return (
@@ -146,10 +173,11 @@ const MacroCard = ({ title, current, target, unit, color, icon }: any) => {
       
       <div>
         <div className="flex items-baseline gap-1 mb-4">
-          <span className="text-3xl font-black text-slate-900 leading-none">{current}</span>
+          <span className={`text-3xl font-black leading-none ${valueTextColors[color]}`}>{currentValue}</span>
+          <span className="text-xl font-black text-slate-400 leading-none">/{safeTarget}</span>
           <span className="text-slate-400 text-sm font-bold">{unit}</span>
         </div>
-        
+
         <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
           <div 
             className={`${colors[color]} h-full transition-all duration-1000 ease-out`} 

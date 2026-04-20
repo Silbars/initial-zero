@@ -6,6 +6,7 @@ import './index.css'
 import { MainLayout } from './components/MainLayout';
 import { Pantry } from './pages/Pantry';
 import FoodLibrary from './pages/FoodLibrary';
+import Settings from './pages/Settings';
 
 function App() {
   const { user, loading } = useAuth();
@@ -39,6 +40,14 @@ function App() {
             </MainLayout>
           ) : <Navigate to="/login" />
         } />
+
+        <Route path="/settings" element={
+          user ? (
+            <MainLayout>
+              <Settings/>
+            </MainLayout>
+          ) : <Navigate to="/login"/>
+        }/>
       </Routes>
       
     </BrowserRouter>

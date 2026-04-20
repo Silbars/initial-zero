@@ -11,6 +11,7 @@ import {
 
 import { db } from "./firebase";
 import { doc, deleteDoc } from "firebase/firestore";
+import { setDoc, getDoc } from "firebase/firestore";
 
 export const addMealLog = async (userId: string, meal: any) => {
   const logsRef = collection(db, "users", userId, "dailyLogs");
@@ -50,4 +51,20 @@ export const deleteMealLog = async (userId: string, logId: string) => {
     console.error("FIREBASE DELETE ERROR:", error);
   }
 
+};
+
+export const updateUserGoals = async (userId: string, goals: any) => {
+  const profileRef = doc(db, "users", userId, "settings", "goals");
+  return setDoc(profileRef, goals, { merge: true });
+};
+
+export const getUserGoals = async (userId: string) => {
+  const profileRef = doc(db, "users", userId, "settings", "goals");
+  const docSnap = await getDoc(profileRef);
+  
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    return { calories: 2000, protein: 150, carbs: 200, fats: 70 };
+  }
 };
