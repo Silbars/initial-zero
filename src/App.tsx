@@ -10,7 +10,7 @@ import Settings from './pages/Settings';
 
 function App() {
   const { user, loading } = useAuth();
-  if (loading) return <div className="h-screen w-screen flex items-center justify-center font-black text-orange-600 animate-pulse">NutriFlow...</div>;
+  if (loading) return <div className="h-screen w-screen flex items-center justify-center font-black text-orange-600 animate-pulse">initialZero...</div>;
 
   return (
     <BrowserRouter>

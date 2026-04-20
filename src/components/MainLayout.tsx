@@ -25,7 +25,7 @@ const navItems = [
     <div className="flex min-h-screen bg-gray-50">
       <aside className="hidden md:flex w-64 bg-slate-900 flex-col text-white sticky top-0 h-screen">
         <div className="p-8">
-          <h1 className="text-2xl font-black tracking-tight text-orange-500">NutriFlow</h1>
+          <h1 className="text-2xl font-black tracking-tight text-orange-500">initialZero</h1>
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
@@ -58,7 +58,7 @@ const navItems = [
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="md:hidden font-bold text-orange-600">NutriFlow</div>
+          <div className="md:hidden font-bold text-orange-600">initialZero</div>
           <div className="hidden md:block text-sm text-gray-400 font-medium">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </div>

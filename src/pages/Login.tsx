@@ -86,7 +86,7 @@ const Login = () => {
           </div>
         </div>
         
-        <h1 className="text-3xl font-extrabold text-slate-800 mb-2">NutriFlow</h1>
+        <h1 className="text-3xl font-extrabold text-slate-800 mb-2">initialZero</h1>
         <p className="text-slate-500 mb-8 font-medium">
           Master your macros and manage your kitchen inventory in one place.
         </p>
